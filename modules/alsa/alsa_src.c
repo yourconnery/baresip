@@ -26,6 +26,7 @@ struct ausrc_st {
 	void *arg;
 	struct ausrc_prm prm;
 	char *device;
+	bool le;					  /**< host endian is little flag      */
 };
 
 
@@ -53,7 +54,10 @@ static void *read_thread(void *arg)
 	struct ausrc_st *st = arg;
 	int num_frames;
 	int err;
-
+	size_t 	i, size;
+	uint8_t temp;
+	uint8_t* buf;
+	
 	num_frames = st->prm.srate * st->prm.ptime / 1000;
 
 	/* Start */
@@ -73,8 +77,18 @@ static void *read_thread(void *arg)
 		else if (err <= 0) {
 			continue;
 		}
-
-		st->rh(st->mbr->buf, err * 2 * st->prm.ch, st->arg);
+		
+		buf = st->mbr->buf;
+		size = err * 2 * st->prm.ch;
+		
+		if (!st->le){
+			for(i=0; i<size-1; i+=2){
+				temp 	= buf[i];
+				buf[i] 	= buf[i+1];
+				buf[i+1]= temp;
+			}
+		}
+		st->rh(buf, size, st->arg);
 	}
 
  out:
@@ -93,7 +107,12 @@ int alsa_src_alloc(struct ausrc_st **stp, struct ausrc *as,
 	int err;
 	(void)ctx;
 	(void)errh;
-
+	const uint32_t endian_magic = 0x12345678;
+	const uint8_t mg0 = ((uint8_t *)&endian_magic)[0];
+	const uint8_t mg1 = ((uint8_t *)&endian_magic)[1];
+	const uint8_t mg2 = ((uint8_t *)&endian_magic)[2];
+	const uint8_t mg3 = ((uint8_t *)&endian_magic)[3];
+	
 	if (!stp || !as || !prm || !rh)
 		return EINVAL;
 	if (prm->fmt != AUFMT_S16LE)
@@ -146,6 +165,13 @@ int alsa_src_alloc(struct ausrc_st **stp, struct ausrc *as,
 		goto out;
 	}
 
+	if (0x12==mg0 && 0x34==mg1 && 0x56==mg2 && 0x78==mg3){
+		st->le = false;
+	}
+	else if (0x12==mg3 && 0x34==mg2 && 0x56==mg1 && 0x78==mg0){
+		st->le = true;
+	}
+	
  out:
 	if (err)
 		mem_deref(st);
