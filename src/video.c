@@ -294,6 +294,8 @@ static void vidsrc_frame_handler(struct vidframe *frame, void *arg)
 		if (frame->fmt == VID_FMT_H264) {
 			/* later should add a H264 mute packet, now just discard the 
 			 * new frame.*/
+			if(vtx->muted_frames < MAX_MUTED_FRAMES)
+				vtx->muted_frames ++;
 			return;
 		}		
 		frame = vtx->mute_frame;
