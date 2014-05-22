@@ -597,6 +597,7 @@ int config_write_template(const char *file, const struct config *cfg)
 #else
 	(void)re_fprintf(f, "#module\t\t\t" MOD_PRE "avcodec" MOD_EXT "\n");
 #endif
+	(void)re_fprintf(f, "module\t\t\t" MOD_PRE "h264packet" MOD_EXT "\n");
 	(void)re_fprintf(f, "#module\t\t\t" MOD_PRE "vpx" MOD_EXT "\n");
 
 	(void)re_fprintf(f, "\n# Video filter Modules (in encoding order)\n");

@@ -229,6 +229,9 @@ endif
 ifneq ($(USE_COREAUDIO),)
 MODULES   += coreaudio
 endif
+ifneq ($(USE_H264PACKET),)
+MODULES   += h264packet
+endif
 ifneq ($(USE_QUICKTIME),)
 MODULES   += quicktime
 endif
