@@ -228,6 +228,10 @@ static void encode_rtp_send(struct vtx *vtx, struct vidframe *frame)
 	lock_write_get(vtx->lock);
 
 	/* Convert image */
+	if (frame->fmt == VID_FMT_H264) {
+		goto unlock;
+	}
+	
 	if (frame->fmt != VID_FMT_YUV420P) {
 
 		vtx->vsrc_size = frame->size;
@@ -284,11 +288,17 @@ static void vidsrc_frame_handler(struct vidframe *frame, void *arg)
 	struct vtx *vtx = arg;
 
 	++vtx->frames;
-
+ 
 	/* Is the video muted? If so insert video mute image */
-	if (vtx->muted)
+	if (vtx->muted){
+		if (frame->fmt == VID_FMT_H264) {
+			/* later should add a H264 mute packet, now just discard the 
+			 * new frame.*/
+			return;
+		}		
 		frame = vtx->mute_frame;
-
+	}
+	
 	if (vtx->muted && vtx->muted_frames >= MAX_MUTED_FRAMES)
 		return;
 
