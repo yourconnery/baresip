@@ -10,6 +10,7 @@
 #include "h26x.h"
 #include "h264packet.h"
  
+const uint8_t h264_level_idc = 0x0c; 
 /*
  * Find the NAL start sequence in a H.264 byte stream
  *
